@@ -34,6 +34,8 @@ using PhotoSharingApp.Portable.DataContracts;
 
 namespace PhotoSharingApp.AppService.Controllers
 {
+    using PhotoSharingApp.AppService.ServiceCore;
+
     /// <summary>
     /// Controller to manage SAS Urls.
     /// </summary>
@@ -57,54 +59,63 @@ namespace PhotoSharingApp.AppService.Controllers
         [Route("api/sasurl")]
         public async Task<List<SasContract>> GetAsync()
         {
-            _telemetryClient.TrackEvent("SAS Url Requested");
-
-            var sasList = new List<SasContract>();
-
-            var containerClient = _environment.StorageAccount.CreateCloudBlobClient();
-
-            var fileName = $"{Guid.NewGuid()}.jpg";
-
-            foreach (var photoType in Enum.GetNames(typeof(PhotoTypeContract)))
+            try
             {
-                var currentPhotoTypeContract = (PhotoTypeContract)Enum.Parse(typeof(PhotoTypeContract), photoType, true);
+                _telemetryClient.TrackEvent("SAS Url Requested");
 
-                string sasContainerName;
+                var sasList = new List<SasContract>();
 
-                // Set the container to the name of the phototype, container names must be lower case
-                _environment.ImageContainerNameMappings.TryGetValue(
-                    currentPhotoTypeContract, out sasContainerName);
+                var containerClient = _environment.StorageAccount.CreateCloudBlobClient();
 
-                // Create the blob client object.
-                var container = containerClient.GetContainerReference(sasContainerName);
-                container.CreateIfNotExists();
-                container.SetPermissions(new BlobContainerPermissions
+                var fileName = $"{Guid.NewGuid()}.jpg";
+
+                foreach (var photoType in Enum.GetNames(typeof(PhotoTypeContract)))
                 {
-                    PublicAccess = BlobContainerPublicAccessType.Blob
-                });
+                    var currentPhotoTypeContract = (PhotoTypeContract)Enum.Parse(typeof(PhotoTypeContract), photoType, true);
 
-                var sasContract = new SasContract
-                {
-                    BlobFileName = fileName
-                };
+                    string sasContainerName;
 
-                // Storing jpeg images and generating the file name.
-                var blob = container.GetBlockBlobReference(sasContract.BlobFileName);
-                blob.Properties.ContentType = "image/jpeg";
-                var accessSignatureForBlob = blob.GetSharedAccessSignature(new SharedAccessBlobPolicy
-                {
-                    Permissions = SharedAccessBlobPermissions.Read
-                                  | SharedAccessBlobPermissions.Write,
-                    SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes(5)
-                });
+                    // Set the container to the name of the phototype, container names must be lower case
+                    _environment.ImageContainerNameMappings.TryGetValue(
+                        currentPhotoTypeContract, out sasContainerName);
 
-                sasContract.SasToken = accessSignatureForBlob;
-                sasContract.SasPhotoType = currentPhotoTypeContract;
-                sasContract.FullBlobUri = blob.Uri;
-                sasList.Add(sasContract);
+                    // Create the blob client object.
+                    var container = containerClient.GetContainerReference(sasContainerName);
+                    container.CreateIfNotExists();
+                    container.SetPermissions(new BlobContainerPermissions
+                                                 {
+                                                     PublicAccess = BlobContainerPublicAccessType.Blob
+                                                 });
+
+                    var sasContract = new SasContract
+                                          {
+                                              BlobFileName = fileName
+                                          };
+
+                    // Storing jpeg images and generating the file name.
+                    var blob = container.GetBlockBlobReference(sasContract.BlobFileName);
+                    blob.Properties.ContentType = "image/jpeg";
+                    var accessSignatureForBlob = blob.GetSharedAccessSignature(new SharedAccessBlobPolicy
+                                                                                   {
+                                                                                       Permissions = SharedAccessBlobPermissions.Read
+                                                                                                     | SharedAccessBlobPermissions.Write,
+                                                                                       SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes(5)
+                                                                                   });
+
+                    sasContract.SasToken = accessSignatureForBlob;
+                    sasContract.SasPhotoType = currentPhotoTypeContract;
+                    sasContract.FullBlobUri = blob.Uri;
+                    sasList.Add(sasContract);
+                }
+
+                return await Task.FromResult(sasList);
             }
+            catch (Exception ex)
+            {
+                _telemetryClient.TrackException(ex);
 
-            return await Task.FromResult(sasList);
+                throw ServiceExceptions.DataLayerException(ex.Message);
+            }
         }
     }
 }
