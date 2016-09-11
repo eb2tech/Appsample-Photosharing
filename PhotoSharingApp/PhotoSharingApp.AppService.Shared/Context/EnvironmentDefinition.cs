@@ -49,8 +49,8 @@ namespace PhotoSharingApp.AppService.Shared.Context
                         // if none exist with these names.
                         DataBaseId = "photosharing-database",
                         CollectionId = "photosharing-document-data",
-                        EndpointUrl = "[Your Azure DocumentDB Endpoint URL]",
-                        AuthorizationKey = "[Your Azure DocumentDB Authorization Id]"
+                        EndpointUrl = WebConfigurationManager.AppSettings["DocumentDb.EndpointUrl"],
+                        AuthorizationKey = WebConfigurationManager.AppSettings["DocumentDb.AuthorizationKey"]
                     };
                 }
 
