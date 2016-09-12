@@ -46,7 +46,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>True</UseIIS>
+          <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>51538</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
@@ -287,6 +287,7 @@
   <ItemGroup>
     <None Include="Properties\PublishProfiles\photosharing-eb2tech - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\photosharing-eb2tech - Web Deploy.pubxml" />
+    <Content Include="template.appsettings.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
@@ -300,5 +301,21 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets'))" />
+  </Target>
+  <Target Name="CopyPrivateAppsettingsTemplate" AfterTargets="PrepareForBuild">
+    <Copy SourceFiles="template.appsettings.config"
+          DestinationFiles="private.appsettings.config"
+          SkipUnchangedFiles="true"
+          Condition="!Exists('private.appsettings.config')"/>
+  </Target>
+  <Target Name="PrivateAppsettingsGroup" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <PrivateAppsettings Include=".\private.appsettings.config"/>
+    </ItemGroup>
+  </Target>
+  <Target Name="CopyPrivateAppsettings" AfterTargets="PrivateAppsettingsGroup">
+    <Copy SourceFiles="@(PrivateAppsettings)"
+          DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="true"/>
   </Target>
 </Project>
