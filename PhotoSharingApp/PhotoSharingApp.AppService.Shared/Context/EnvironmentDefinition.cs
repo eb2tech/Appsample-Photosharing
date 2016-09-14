@@ -65,7 +65,7 @@ namespace PhotoSharingApp.AppService.Shared.Context
         {
             get
             {
-                return "[Your Notification Hub's Full Shared Access Signature]";
+                return WebConfigurationManager.AppSettings["Hub.AccessSignature"];
             }
         }
 
@@ -74,7 +74,7 @@ namespace PhotoSharingApp.AppService.Shared.Context
         /// </summary>
         public override string HubName
         {
-            get { return "[Your Notification Hub Name]"; }
+            get { return WebConfigurationManager.AppSettings["Hub.Name"]; }
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace PhotoSharingApp.AppService.Shared.Context
         /// </summary>
         public override string InstrumentationKey
         {
-            get { return "[You App Insights Instrumentation Key]"; }
+            get { return WebConfigurationManager.AppSettings["Instrumentation.Key"]; }
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace PhotoSharingApp.AppService.Shared.Context
         /// </summary>
         public override string StorageAccessKey
         {
-            get { return "[Your Azure Storage access key]"; }
+            get { return WebConfigurationManager.AppSettings["Storage.AccessKey"]; }
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace PhotoSharingApp.AppService.Shared.Context
         /// </summary>
         public override string StorageAccountName
         {
-            get { return "[Your Azure Storage account name]"; }
+            get { return WebConfigurationManager.AppSettings["Storage.AccountName"]; }
         }
     }
 }
